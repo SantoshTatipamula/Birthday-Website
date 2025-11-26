@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Happy Birthday, Akka 🎉</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    :root {
+      --bg1: #050716;
+      --bg2: #150836;
+      --accent: #ffb347;
+      --accent-2: #ff6fd8;
+      --text: #ffffff;
+      --soft: rgba(255, 255, 255, 0.1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        sans-serif;
+      min-height: 100vh;
+      color: var(--text);
+      background: radial-gradient(circle at top, #1a1040, #050716 60%);
+      overflow: hidden;
+    }
+
+    /* Main layout */
+    main {
+      position: relative;
+      height: 100vh;
+      width: 100vw;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      text-align: center;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+
+    .card {
+      max-width: 800px;
+      width: 100%;
+      background: linear-gradient(135deg, #100827aa, #1f102fdd);
+      border-radius: 1.5rem;
+      padding: 2rem;
+      box-shadow: 0 18px 50px rgba(0, 0, 0, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(14px);
+    }
+
+    /* Glow background */
+    .glow-bg {
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(circle at 10% 20%, #ff6fd822, transparent 60%),
+        radial-gradient(circle at 90% 80%, #ffb34722, transparent 60%);
+      mix-blend-mode: screen;
+      pointer-events: none;
+      z-index: -2;
+      opacity: 0;
+      transition: opacity 1.5s ease-in-out;
+    }
+    .glow-bg.active {
+      opacity: 1;
+    }
+
+    /* Overlay start screen */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(circle at top, #0b041f, #02030a 70%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 1.5rem;
+      z-index: 100;
+    }
+
+    .overlay h1 {
+      font-size: clamp(2.2rem, 5vw, 3rem);
+      margin-bottom: 0.5rem;
+    }
+
+    .overlay p {
+      font-size: 1rem;
+      opacity: 0.8;
+      margin-bottom: 1.5rem;
+    }
+
+    .btn-primary {
+      border: none;
+      outline: none;
+      padding: 0.9rem 2.4rem;
+      border-radius: 999px;
+      font-size: 1rem;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      cursor: pointer;
+      background: linear-gradient(135deg, #ffb347, #ff6fd8);
+      color: #1b0626;
+      box-shadow: 0 0 25px rgba(255, 111, 216, 0.4);
+      transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px) scale(1.03);
+      box-shadow: 0 0 40px rgba(255, 111, 216, 0.7);
+      filter: brightness(1.06);
+    }
+
+    .btn-primary:active {
+      transform: translateY(1px) scale(0.98);
+      box-shadow: 0 0 15px rgba(255, 111, 216, 0.4);
+    }
+
+    .title {
+      font-size: clamp(2.3rem, 5vw, 3rem);
+      margin-bottom: 0.4rem;
+      text-shadow: 0 0 14px rgba(255, 179, 71, 0.7);
+    }
+
+    .highlight {
+      background: linear-gradient(135deg, #ffb347, #ff6fd8);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .subtitle {
+      opacity: 0.9;
+      font-size: 1rem;
+      margin-bottom: 1.4rem;
+    }
+
+    .section {
+      margin-top: 1.4rem;
+    }
+
+    .tagline {
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      opacity: 0.7;
+      margin-bottom: 0.8rem;
+    }
+
+    /* Memory frame */
+    .memory-frame {
+      margin-top: 1rem;
+      margin-bottom: 2rem;
+      background: var(--soft);
+      border-radius: 1.2rem;
+      padding: 0.75rem;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.6rem;
+      touch-action: pan-y; /* allow vertical scroll + detect horizontal swipe */
+    }
+
+    .memory-photo {
+      width: 100%;
+      max-height: 80vh;
+      object-fit: contain;
+      border-radius: 0.9rem;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6);
+      transition: opacity 0.4s ease, transform 0.4s ease;
+    }
+
+    .memory-photo.fade-out {
+      opacity: 0;
+      transform: scale(0.98);
+    }
+    .memory-photo.fade-in {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .memory-caption {
+      font-size: 0.9rem;
+      opacity: 0.95;
+      font-style: italic;
+    }
+
+    .memory-controls {
+      margin-top: 0.7rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.6rem;
+      font-size: 0.85rem;
+      opacity: 0.85;
+      flex-wrap: wrap;
+    }
+
+    .chip {
+      padding: 0.28rem 0.8rem;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      background: rgba(0, 0, 0, 0.18);
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    /* Cake + message */
+    .cake-section {
+      margin-top: 1.4rem;
+    }
+
+    .cake-emoji {
+      font-size: 3.3rem;
+      filter: drop-shadow(0 0 16px rgba(255, 255, 255, 0.8));
+      animation: gentle-bounce 2.4s ease-in-out infinite;
+    }
+
+    .wish-text {
+      margin-top: 1rem;
+      font-size: 0.98rem;
+      line-height: 1.7;
+      text-align: left;
+      max-height: 40vh;
+      overflow-y: auto;
+      padding-right: 0.4rem;
+      white-space: pre-line;
+    }
+
+    /* Cursor effect (optional) */
+    .cursor {
+      display: inline-block;
+      width: 0.6ch;
+      animation: blink 0.8s steps(1) infinite;
+      background: #ffffff;
+      margin-left: 2px;
+    }
+
+    @keyframes blink {
+      0%, 50% { opacity: 1; }
+      51%, 100% { opacity: 0; }
+    }
+
+    @keyframes gentle-bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-6px); }
+    }
+
+    /* Balloons */
+    .balloon-layer {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: -1;
+    }
+
+    .balloon {
+      position: absolute;
+      width: 36px;
+      height: 50px;
+      border-radius: 60% 60% 55% 55%;
+      background: radial-gradient(circle at 30% 20%, #ffffffaa, #ff6fd8);
+      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.5);
+      animation-name: floatUp;
+      animation-timing-function: linear;
+      animation-iteration-count: infinite;
+    }
+
+    .balloon::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 100%;
+      width: 1px;
+      height: 60px;
+      background: rgba(255, 255, 255, 0.6);
+      transform: translateX(-50%);
+    }
+
+    .balloon:nth-child(3n) {
+      background: radial-gradient(circle at 30% 20%, #ffffffaa, #ffb347);
+    }
+
+    .balloon:nth-child(4n) {
+      background: radial-gradient(circle at 30% 20%, #ffffffaa, #6fd8ff);
+    }
+
+    @keyframes floatUp {
+      0% {
+        transform: translateY(110vh) translateX(0);
+        opacity: 0;
+      }
+      10% {
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(-120vh) translateX(-40px);
+        opacity: 0;
+      }
+    }
+
+    /* Confetti canvas */
+    #confettiCanvas {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 20;
+    }
+
+    /* Fireworks container */
+    #fireworks {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    .firework {
+      position: absolute;
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: #fff;
+      box-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
+      animation: explode 1.4s ease-out forwards;
+    }
+
+    @keyframes explode {
+      0% {
+        transform: scale(0.2);
+        opacity: 1;
+      }
+      70% {
+        transform: scale(1.5);
+        opacity: 1;
+      }
+      100% {
+        transform: scale(2);
+        opacity: 0;
+      }
+    }
+
+    /* Mobile tweaks */
+    @media (max-width: 480px) {
+      .card {
+        padding: 1.2rem;
+      }
+
+      .memory-photo {
+        max-height: 75vh;
+      }
+
+      .title {
+        font-size: 2rem;
+      }
+
+      .wish-text {
+        font-size: 0.9rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Background glow & decorative layers -->
+  <div class="glow-bg" id="glowBg"></div>
+  <div class="balloon-layer" id="balloonLayer"></div>
+  <div id="fireworks"></div>
+  <canvas id="confettiCanvas"></canvas>
+
+  <!-- Background music (PUT YOUR FILE IN music/ FOLDER) -->
+  <!-- Example: music/soft-emotional.mp3 -->
+  <audio id="bgMusic" src="music/soft-emotional.mp3" preload="auto" loop></audio>
+
+  <!-- Tap to start overlay -->
+  <div class="overlay" id="overlay">
+    <h1>🎉 A Little Birthday Surprise 🎉</h1>
+    <p>Turn your sound on, relax, and tap the button to begin.</p>
+    <button class="btn-primary" id="startButton">Start the Magic</button>
+  </div>
+
+  <!-- Main birthday content -->
+  <main>
+    <div class="card">
+      <div class="tagline">FOR MY AKKA</div>
+      <h1 class="title">
+        Happy Birthday,
+        <span class="highlight" id="sisterName">Akka</span> 🎂
+      </h1>
+      <p class="subtitle">
+        Today is your day. So sit back, smile, and let a few memories and words do the talking.
+      </p>
+
+      <!-- Memories Section -->
+      <section class="section" id="memoriesSection">
+        <h2>Our Little Time Machine 🫶</h2>
+        <p>
+          Swipe left/right or tap next to go through our memories.
+        </p>
+        <div class="memory-frame" id="memoryFrame">
+          <img
+            src="images/memory1.JPG"
+            alt="Memory photo"
+            class="memory-photo"
+            id="memoryPhoto"
+          />
+          <p class="memory-caption" id="memoryCaption"></p>
+        </div>
+        <div class="memory-controls">
+          <span class="chip" id="memoryCounter"></span>
+          <button class="btn-primary" id="prevMemoryButton">
+            ⬅ Previous
+          </button>
+          <button class="btn-primary" id="nextMemoryButton">
+            Next Memory ➜
+          </button>
+        </div>
+      </section>
+
+      <!-- Cake + Deep Message -->
+      <section class="section cake-section hidden" id="cakeSection">
+        <div class="cake-emoji" aria-hidden="true">🎂</div>
+        <p class="subtitle" style="margin-top: 0.6rem;">
+          And now, the part I never say out loud enough…
+        </p>
+        <div class="wish-text" id="wishText"></div>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    // ========= CONFIG =========
+    const SISTER_NAME = "Rinithakka";
+
+    const memories = [
+      {
+        src: "images/memory1.JPG",
+        caption:
+          "That day we laughed so much my cheeks were hurting – still one of my favourite days with you."
+      },
+      {
+        src: "images/memory2.jpg",
+        caption:
+          "All the small trips, late-night talks, and random fights that turned into inside jokes."
+      },
+      {
+        src: "images/memory3.jpeg",
+        caption:
+          "No matter where we are, when we’re together it just feels like home."
+      }
+    ];
+
+    const wishMessage = `
+Dear Akka,
+
+Sometimes I forget to say it, but you mean so much to me.
+
+You are the person who has seen my best and my worst and still chooses to stand beside me. 
+You are my first friend, my secret keeper, my support system, and the person I silently look up to.
+
+Thank you for caring me. 
+for every time you listened even when you were tired.
+
+I may not always express it, but I’m really lucky to have you as my sister. 
+
+On your birthday, I don’t just wish you happiness today,
+I wish you peaceful nights, people who truly value you,
+opportunities that make you grow, and moments that make your heart feel full.
+
+No matter how old we get, I’ll always be there for you —
+cheering for you, annoying you, and loving you in my own little way.
+
+Happy Birthday, ${SISTER_NAME}. 
+You deserve the world… and a little extra. 💜
+`;
+
+    // ========= DOM ELEMENTS =========
+    const overlay = document.getElementById("overlay");
+    const startButton = document.getElementById("startButton");
+    const sisterNameEl = document.getElementById("sisterName");
+    const memoriesSection = document.getElementById("memoriesSection");
+    const memoryFrame = document.getElementById("memoryFrame");
+    const memoryPhoto = document.getElementById("memoryPhoto");
+    const memoryCaption = document.getElementById("memoryCaption");
+    const memoryCounter = document.getElementById("memoryCounter");
+    const prevMemoryButton = document.getElementById("prevMemoryButton");
+    const nextMemoryButton = document.getElementById("nextMemoryButton");
+    const cakeSection = document.getElementById("cakeSection");
+    const wishTextEl = document.getElementById("wishText");
+    const glowBg = document.getElementById("glowBg");
+    const balloonLayer = document.getElementById("balloonLayer");
+    const confettiCanvas = document.getElementById("confettiCanvas");
+    const fireworksContainer = document.getElementById("fireworks");
+    const bgMusic = document.getElementById("bgMusic");
+
+    sisterNameEl.textContent = SISTER_NAME;
+
+    // ========= STATE =========
+    let currentMemoryIndex = 0;
+    let typingIntervalId = null;
+    let slideshowIntervalId = null;
+    const SLIDESHOW_INTERVAL_MS = 6000;
+
+    let touchStartX = 0;
+    let touchEndX = 0;
+
+    // ========= MEMORIES =========
+    function updateMemoryButtonText() {
+      if (currentMemoryIndex === memories.length - 1) {
+        nextMemoryButton.textContent = "Show Cake 🎂";
+      } else {
+        nextMemoryButton.textContent = "Next Memory ➜";
+      }
+    }
+
+    function showMemory(index) {
+      if (index < 0) index = 0;
+      if (index > memories.length - 1) index = memories.length - 1;
+      currentMemoryIndex = index;
+
+      const m = memories[index];
+
+      // Simple fade transition
+      memoryPhoto.classList.remove("fade-in");
+      memoryPhoto.classList.add("fade-out");
+
+      setTimeout(() => {
+        memoryPhoto.src = m.src;
+        memoryCaption.textContent = m.caption;
+        memoryCounter.textContent = `Memory ${index + 1} of ${memories.length}`;
+        memoryPhoto.classList.remove("fade-out");
+        memoryPhoto.classList.add("fade-in");
+      }, 200);
+
+      updateMemoryButtonText();
+    }
+
+    function goToNextMemory() {
+      if (currentMemoryIndex < memories.length - 1) {
+        showMemory(currentMemoryIndex + 1);
+      } else {
+        // go to cake
+        goToCake();
+      }
+    }
+
+    function goToPrevMemory() {
+      if (currentMemoryIndex > 0) {
+        showMemory(currentMemoryIndex - 1);
+      }
+    }
+
+    // ========= BALLOONS =========
+    function createBalloons(count = 18) {
+      const layerWidth = window.innerWidth;
+      for (let i = 0; i < count; i++) {
+        const b = document.createElement("div");
+        b.className = "balloon";
+        const left = Math.random() * layerWidth;
+        const delay = Math.random() * 5;
+        const duration = 12 + Math.random() * 7;
+
+        b.style.left = left + "px";
+        b.style.animationDuration = duration + "s";
+        b.style.animationDelay = delay + "s";
+
+        balloonLayer.appendChild(b);
+      }
+    }
+
+    // ========= TYPING EFFECT =========
+    function startTypingEffect(text, element, speed = 35) {
+      if (typingIntervalId) clearInterval(typingIntervalId);
+      element.innerHTML = "";
+      const cursorSpan = document.createElement("span");
+      cursorSpan.className = "cursor";
+      element.appendChild(cursorSpan);
+
+      let i = 0;
+      typingIntervalId = setInterval(() => {
+        if (i < text.length) {
+          cursorSpan.insertAdjacentText("beforebegin", text.charAt(i));
+          i++;
+        } else {
+          clearInterval(typingIntervalId);
+        }
+      }, speed);
+    }
+
+    // ========= CONFETTI =========
+    const confettiCtx = confettiCanvas.getContext("2d");
+    let confettiPieces = [];
+    let confettiAnimationId = null;
+
+    function resizeConfettiCanvas() {
+      confettiCanvas.width = window.innerWidth;
+      confettiCanvas.height = window.innerHeight;
+    }
+    window.addEventListener("resize", resizeConfettiCanvas);
+    resizeConfettiCanvas();
+
+    function createConfettiPiece() {
+      const colors = ["#ff6fd8", "#ffb347", "#6fd8ff", "#ffffff"];
+      return {
+        x: Math.random() * confettiCanvas.width,
+        y: -10,
+        size: 5 + Math.random() * 6,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        speedY: 2 + Math.random() * 4,
+        speedX: -1 + Math.random() * 2,
+        rotation: Math.random() * 360,
+        rotationSpeed: -4 + Math.random() * 8
+      };
+    }
+
+    function startConfetti(duration = 3000) {
+      confettiPieces = [];
+      const startTime = performance.now();
+
+      function addInitialConfetti() {
+        for (let i = 0; i < 150; i++) {
+          confettiPieces.push(createConfettiPiece());
+        }
+      }
+      addInitialConfetti();
+
+      function animateConfetti(now) {
+        const elapsed = now - startTime;
+        confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+
+        confettiPieces.forEach((p) => {
+          p.y += p.speedY;
+          p.x += p.speedX;
+          p.rotation += p.rotationSpeed;
+
+          confettiCtx.save();
+          confettiCtx.translate(p.x, p.y);
+          confettiCtx.rotate((p.rotation * Math.PI) / 180);
+          confettiCtx.fillStyle = p.color;
+          confettiCtx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+          confettiCtx.restore();
+        });
+
+        confettiPieces = confettiPieces.filter(
+          (p) =>
+            p.y < confettiCanvas.height + 20 &&
+            p.x > -20 &&
+            p.x < confettiCanvas.width + 20
+        );
+
+        if (elapsed < duration) {
+          confettiAnimationId = requestAnimationFrame(animateConfetti);
+        } else {
+          confettiCtx.clearRect(
+            0,
+            0,
+            confettiCanvas.width,
+            confettiCanvas.height
+          );
+          confettiPieces = [];
+        }
+      }
+
+      if (confettiAnimationId) cancelAnimationFrame(confettiAnimationId);
+      confettiAnimationId = requestAnimationFrame(animateConfetti);
+    }
+
+    // ========= FIREWORKS =========
+    let fireworksIntervalId = null;
+
+    function launchFirework() {
+      const fw = document.createElement("div");
+      fw.className = "firework";
+      const x = Math.random() * window.innerWidth;
+      const y = window.innerHeight * (0.1 + Math.random() * 0.4);
+      fw.style.left = x + "px";
+      fw.style.top = y + "px";
+
+      const colors = ["#ff6fd8", "#ffb347", "#6fd8ff", "#ffffff"];
+      const color = colors[Math.floor(Math.random() * colors.length)];
+      fw.style.background = color;
+      fw.style.boxShadow = `0 0 10px ${color}`;
+
+      fireworksContainer.appendChild(fw);
+      fw.addEventListener("animationend", () => {
+        fw.remove();
+      });
+    }
+
+    function startFireworksLoop() {
+      if (fireworksIntervalId) clearInterval(fireworksIntervalId);
+      fireworksIntervalId = setInterval(() => {
+        // a couple of fireworks each time
+        launchFirework();
+        if (Math.random() > 0.5) launchFirework();
+      }, 2000);
+    }
+
+    // ========= SLIDESHOW =========
+    function startSlideshow() {
+      if (slideshowIntervalId) clearInterval(slideshowIntervalId);
+      slideshowIntervalId = setInterval(() => {
+        if (!memoriesSection.classList.contains("hidden")) {
+          if (currentMemoryIndex < memories.length - 1) {
+            goToNextMemory();
+          } else {
+            goToCake();
+          }
+        }
+      }, SLIDESHOW_INTERVAL_MS);
+    }
+
+    function resetSlideshowTimer() {
+      if (slideshowIntervalId) {
+        clearInterval(slideshowIntervalId);
+        startSlideshow();
+      }
+    }
+
+    // ========= CAKE TRANSITION =========
+    function goToCake() {
+      memoriesSection.classList.add("hidden");
+      cakeSection.classList.remove("hidden");
+      startConfetti(3500);
+      startTypingEffect(wishMessage.trim(), wishTextEl, 35);
+
+      // stop slideshow since we've reached the end
+      if (slideshowIntervalId) clearInterval(slideshowIntervalId);
+    }
+
+    // ========= SWIPE HANDLERS =========
+    memoryFrame.addEventListener("touchstart", (e) => {
+      touchStartX = e.changedTouches[0].screenX;
+    });
+
+    memoryFrame.addEventListener("touchend", (e) => {
+      touchEndX = e.changedTouches[0].screenX;
+      handleSwipe();
+    });
+
+    function handleSwipe() {
+      const diff = touchEndX - touchStartX;
+      const threshold = 50; // pixels
+      if (Math.abs(diff) > threshold) {
+        if (diff < 0) {
+          // swipe left -> next
+          goToNextMemory();
+        } else {
+          // swipe right -> previous
+          goToPrevMemory();
+        }
+        resetSlideshowTimer();
+      }
+    }
+
+    // ========= START SEQUENCE =========
+    function startSequence() {
+      overlay.classList.add("hidden");
+      glowBg.classList.add("active");
+      createBalloons();
+      showMemory(0);
+      startSlideshow();
+      startFireworksLoop();
+
+      // try to play music (will work after first user interaction)
+      if (bgMusic) {
+        bgMusic
+          .play()
+          .catch(() => {
+            // ignore autoplay errors
+          });
+      }
+    }
+
+    // ========= EVENT LISTENERS =========
+    startButton.addEventListener("click", startSequence);
+
+    nextMemoryButton.addEventListener("click", () => {
+      goToNextMemory();
+      resetSlideshowTimer();
+    });
+
+    prevMemoryButton.addEventListener("click", () => {
+      goToPrevMemory();
+      resetSlideshowTimer();
+    });
+
+    // Also allow Enter/Space to start
+    document.addEventListener("keydown", (e) => {
+      if (
+        !overlay.classList.contains("hidden") &&
+        (e.key === "Enter" || e.key === " ")
+      ) {
+        startSequence();
+      }
+    });
+  </script>
+</body>
+</html>
